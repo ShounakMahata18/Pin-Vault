@@ -6,6 +6,6 @@ const router = Router();
 
 router.post("/send-code", sendCode);
 router.post("/verify-code", verifyCode);
-router.get("/logout", logout);
+router.post("/logout", logout);
 
 export default router;

@@ -224,14 +224,18 @@ async function renderSaveScreen() {
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     const { authToken } = await chrome.storage.local.get("authToken");
 
+    console.log(authToken);
     try {
       if (authToken) {
-        await fetch(`${API}/auth/extension/logout`, {
+        const res = await fetch(`${API}/auth/extension/logout`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
         });
+        const data = res.json();
+
+        console.log(data.message);
       }
     } catch (err) {
       console.warn("Server unavailable during logout.");
