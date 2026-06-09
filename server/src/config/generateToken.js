@@ -25,7 +25,7 @@ export const generateToken = async (id, res) => {
     { id, sessionId },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: "7d",
+      expiresIn: "30d",
     },
   );
 
@@ -54,15 +54,15 @@ export const generateToken = async (id, res) => {
   };
 
   // Set refresh token in redis
-  await redisClient.setEx(refreshTokenKey, 7 * 24 * 60 * 60, refreshToken);
+  await redisClient.setEx(refreshTokenKey, 30 * 24 * 60 * 60, refreshToken);
 
   // Set sessionId in redis
-  await redisClient.setEx(activeSessionKey, 7 * 24 * 60 * 60, sessionId);
+  await redisClient.setEx(activeSessionKey, 30 * 24 * 60 * 60, sessionId);
 
   // Set session data in redis
   await redisClient.setEx(
     sessionDatakey,
-    7 * 24 * 60 * 60,
+    30 * 24 * 60 * 60,
     JSON.stringify(sessionData),
   );
 
@@ -78,7 +78,7 @@ export const generateToken = async (id, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 
   // Generate CSRF token
@@ -122,7 +122,7 @@ export const verifyRefreshToken = async (refreshToken) => {
     // Set in redis
     await redisClient.setEx(
       `session:${decode.sessionId}`,
-      7 * 24 * 60 * 60,
+      30 * 24 * 60 * 60,
       JSON.stringify(parsedSessionData),
     );
 

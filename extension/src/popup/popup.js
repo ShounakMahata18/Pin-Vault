@@ -1,7 +1,7 @@
 import { CONFIG } from "../config/config.js";
 
 const API = CONFIG.API_BASE_URL;
-const CODE_EXPIRY_MS = 10 * 60 * 1000; // must match server (10 min)
+const CODE_EXPIRY_MS = 5 * 60 * 1000; // must match server (5 min)
 
 const app = document.getElementById("app");
 const statusEl = document.getElementById("status");
