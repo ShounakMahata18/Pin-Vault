@@ -12,13 +12,12 @@ const DomainView = ({
   return (
     <div className="flex flex-col lg:flex-row h-full gap-4">
       {/* LEFT / TOP: Domains List */}
-      <div className="w-full lg:w-72 bg-slate-900 rounded-lg border overflow-x-auto lg:overflow-y-auto shrink-0 shadow-sm">
-        <div className="hidden lg:block p-4 font-bold text-gray-200 border-b border-slate-700">
+      <div className="w-full lg:w-72 bg-slate-900 rounded-lg border shadow-sm flex flex-col overflow-hidden">
+        <div className="hidden lg:block p-4 font-bold text-gray-200 border-b border-slate-700 shrink-0">
           Domains
         </div>
 
-        {/* Horizontal scroll on mobile, vertical list on large screens */}
-        <div className="flex lg:flex-col p-2 lg:p-0">
+        <div className="flex lg:flex-col p-2 lg:p-0 overflow-x-auto lg:overflow-y-auto flex-1 min-h-0">
           {domains.map((domain) => (
             <button
               key={domain._id}
@@ -32,6 +31,7 @@ const DomainView = ({
               <div className="font-medium truncate max-w-30 lg:max-w-none">
                 {domain._id}
               </div>
+
               <div className="text-sm opacity-70 ml-2 lg:ml-0">
                 ({domain.count})
               </div>

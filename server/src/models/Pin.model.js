@@ -39,7 +39,6 @@ const PinSchema = new mongoose.Schema(
 );
 
 PinSchema.index({ userId: 1, savedAt: -1 });
-PinSchema.index({ userId: 1, domain: 1 });
 PinSchema.index({ userId: 1, domain: 1, savedAt: -1 });
 
 const Pin = mongoose.model("Pin", PinSchema);

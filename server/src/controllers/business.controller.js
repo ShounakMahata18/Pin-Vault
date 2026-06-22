@@ -127,8 +127,35 @@ export const getDomainPins = async (req, res) => {
     .select("_id title url screenshot savedAt")
     .sort({ savedAt: -1 });
 
-  res.json({
+  return res.json({
     success: true,
     pins,
   });
+};
+
+export const getDatePins = async (req, res) => {
+  try {
+    const { userId, date } = req.params;
+
+    const startDate = new Date(`${date}T00:00:00.000Z`);
+    const endDate = new Date(`${date}T23:59:59.999Z`);
+
+    const pins = await Pin.find({
+      userId,
+      savedAt: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    }).sort({ savedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      pins,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

@@ -1,108 +1,56 @@
 import React, { useState, useEffect, useRef } from "react";
-import Navbar from "../components/Navbar";
-import PinCard from "../components/PinCard";
-import DomainView from "../components/DomainView";
-import { AppData } from "../context/AppContext";
 import { toast } from "react-toastify";
 
-import api from "../Api/apiInterceptor.js";
+import useView from "../hooks/useView";
+import useListPins from "../hooks/useListPins";
+import useDomainPins from "../hooks/useDomainPins";
+import Navbar from "../components/Navbar";
+import ListView from "../components/ListView";
+import DomainView from "../components/DomainView";
+import { AppData } from "../context/AppContext";
+
+import api from "../Api/apiInterceptor";
 
 const backend_URL =
   import.meta.env.VITE_REACT_APP_BACKEND_URL || "http://localhost:5000";
 
-const Home = () => {
+const Dashboard = () => {
   // users data
   const { user } = AppData();
   const userId = user?._id;
 
-  // helper
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
   // view
-  const [view, setView] = useState("list");
+  const { view, setView } = useView("list");
 
   // List view
-  const scrollRef = useRef(null);
-  const [listPins, setListPins] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const {
+    listScrollRef,
+    listPins,
+    listLoading,
+    listError,
+    hasMore,
+    page,
+    fetchListPins,
+    setListPins,
+  } = useListPins(userId, view === "list", 10);
 
   // Domain view
-  const [domains, setDomains] = useState([]);
-  const [selectedDomain, setSelectedDomain] = useState(null);
-  const [domainPins, setDomainPins] = useState([]);
-  const [domainLoading, setDomainLoading] = useState(false);
+  const {
+    domainScrollRef,
+    domains,
+    selectedDomain,
+    setSelectedDomain,
+    domainPins,
+    domainLoading,
+    domainError,
+    fetchDomains,
+    fetchDomainPins,
+  } = useDomainPins(userId);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "Unknown Date";
 
     return new Date(dateString).toLocaleString();
-  };
-
-  const fetchListPins = async (pageNumber = 1) => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-
-    try {
-      const { data } = await api.get(
-        `/api/get-pins/${userId}?page=${pageNumber}&limit=20`,
-      );
-
-      if (data.success) {
-        setListPins((prev) =>
-          pageNumber === 1 ? data.pins : [...prev, ...data.pins],
-        );
-
-        setHasMore(data.hasMore);
-        setPage(pageNumber);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load pins");
-      setError("Failed to load pins.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchDomains = async (req, res) => {
-    try {
-      const { data } = await api.get(`/api/get-domains/${userId}`);
-
-      if (data.success) {
-        setDomains(data.domains);
-
-        if (data.domains.length > 0) {
-          setSelectedDomain(data.domains[0]._id);
-        }
-      }
-
-      console.log(data.domains);
-    } catch (error) {
-      console.error(error);
-      toast.error(error);
-    }
-  };
-
-  const fetchDomainPins = async (domain) => {
-    try {
-      setDomainLoading(true);
-
-      const { data } = await api.get(
-        `/api/get-domains/${userId}/${encodeURIComponent(domain)}`,
-      );
-
-      if (data.success) {
-        setDomainPins(data.pins);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load domain pins");
-    } finally {
-      setDomainLoading(false);
-    }
   };
 
   const handleDelete = async (pinId) => {
@@ -127,49 +75,16 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (userId) {
-      setListPins([]);
-      setPage(1);
-      setHasMore(true);
-      setError(null);
-
-      fetchListPins(1);
+    switch (view) {
+      case "list":
+        fetchListPins(1);
+        break;
+      case "domain":
+        fetchDomains();
+        break;
+      default:
     }
-  }, [userId]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-
-    if (!container) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container;
-
-      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-
-      if (distanceFromBottom < 500 && !isLoading && hasMore) {
-        fetchListPins(page + 1);
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [page, isLoading, hasMore]);
-
-  useEffect(() => {
-    if (view !== "domain") return;
-
-    fetchDomains();
   }, [view]);
-
-  useEffect(() => {
-    if (!selectedDomain) return;
-
-    fetchDomainPins(selectedDomain);
-  }, [selectedDomain]);
 
   return (
     <div className="h-screen overflow-hidden bg-slate-950 font-sans flex flex-col">
@@ -245,20 +160,23 @@ const Home = () => {
           </button>
         </div>
 
-        {error && <p className="text-center text-red-600 mb-4">{error}</p>}
-
-        <div ref={scrollRef} className="flex-1 overflow-y-auto pr-2">
-          {view === "list" && (
-            <PinCard
+        {view === "list" && (
+          <div ref={listScrollRef} className="flex-1 overflow-y-auto pr-2">
+            {listError && (
+              <p className="text-center text-red-600 mb-4">{listError}</p>
+            )}
+            <ListView
               listPins={listPins}
-              isLoading={isLoading}
+              loading={listLoading}
               hasMore={hasMore}
               onDelete={handleDelete}
               formatDateTime={formatDateTime}
             />
-          )}
+          </div>
+        )}
 
-          {view === "domain" && (
+        {view === "domain" && (
+          <div ref={domainScrollRef} className="flex-1 overflow-y-auto pr-2">
             <DomainView
               domains={domains}
               selectedDomain={selectedDomain}
@@ -268,30 +186,30 @@ const Home = () => {
               onDelete={handleDelete}
               formatDateTime={formatDateTime}
             />
-          )}
+          </div>
+        )}
 
-          {view === "date" && (
-            <div className="space-y-4">
-              {listPins.map((pin) => (
-                <div
-                  key={pin._id}
-                  className="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
-                >
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                    {pin.title}
-                  </h3>
+        {view === "date" && (
+          <div className="space-y-4">
+            {listPins.map((pin) => (
+              <div
+                key={pin._id}
+                className="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
+              >
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                  {pin.title}
+                </h3>
 
-                  <p className="text-sm text-gray-500">
-                    Saved: {formatDateTime(pin.savedAt)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <p className="text-sm text-gray-500">
+                  Saved: {formatDateTime(pin.savedAt)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
 };
 
-export default Home;
+export default Dashboard;

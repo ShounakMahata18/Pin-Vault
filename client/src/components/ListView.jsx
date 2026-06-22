@@ -1,8 +1,8 @@
 import React from "react";
 
-const PinCard = ({
+const ListView = ({
   listPins,
-  isLoading,
+  loading,
   hasMore,
   onDelete,
   formatDateTime,
@@ -67,7 +67,7 @@ const PinCard = ({
         </div>
       ))}
 
-      {isLoading && (
+      {loading && (
         <div className="py-6 text-center text-gray-500">
           Loading more pins...
         </div>
@@ -82,4 +82,4 @@ const PinCard = ({
   );
 };
 
-export default PinCard;
+export default ListView;
