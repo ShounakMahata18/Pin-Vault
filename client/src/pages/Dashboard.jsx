@@ -28,8 +28,8 @@ const Dashboard = () => {
     listPins,
     listLoading,
     listError,
-    hasMore,
-    page,
+    listHasMore,
+    listPage,
     fetchListPins,
     setListPins,
   } = useListPins(userId, view === "list", 10);
@@ -37,15 +37,16 @@ const Dashboard = () => {
   // Domain view
   const {
     domainScrollRef,
+    selectedDomainScrollRef,
     domains,
     selectedDomain,
     setSelectedDomain,
-    domainPins,
+    selectedDomainPins,
     domainLoading,
     domainError,
     fetchDomains,
-    fetchDomainPins,
-  } = useDomainPins(userId);
+    fetchSelectedDomainPins,
+  } = useDomainPins(userId, view === "domain", 20, 10);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "Unknown Date";
@@ -168,7 +169,7 @@ const Dashboard = () => {
             <ListView
               listPins={listPins}
               loading={listLoading}
-              hasMore={hasMore}
+              hasMore={listHasMore}
               onDelete={handleDelete}
               formatDateTime={formatDateTime}
             />
@@ -176,12 +177,14 @@ const Dashboard = () => {
         )}
 
         {view === "domain" && (
-          <div ref={domainScrollRef} className="flex-1 overflow-y-auto pr-2">
+          <div className="flex-1 min-h-0 pr-2 overflow-hidden">
             <DomainView
+              domainScrollRef={domainScrollRef}
+              selectedDomainScrollRef={selectedDomainScrollRef}
               domains={domains}
               selectedDomain={selectedDomain}
               setSelectedDomain={setSelectedDomain}
-              domainPins={domainPins}
+              domainPins={selectedDomainPins}
               loading={domainLoading}
               onDelete={handleDelete}
               formatDateTime={formatDateTime}

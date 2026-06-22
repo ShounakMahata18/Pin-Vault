@@ -7,13 +7,13 @@ const useListPins = (userId, enabled = true, limit = 10) => {
   const listScrollRef = useRef(null);
 
   const [listPins, setListPins] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [listPage, setListPage] = useState(1);
+  const [listHasMore, setListHasMore] = useState(true);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState(null);
 
   const fetchListPins = async (pageNumber = 1) => {
-    if (listLoading || !hasMore) return;
+    if (listLoading || !listHasMore) return;
 
     setListLoading(true);
 
@@ -27,8 +27,8 @@ const useListPins = (userId, enabled = true, limit = 10) => {
           pageNumber === 1 ? data.pins : [...prev, ...data.pins],
         );
 
-        setHasMore(data.hasMore);
-        setPage(pageNumber);
+        setListHasMore(data.hasMore);
+        setListPage(data.page);
       }
     } catch (err) {
       console.error(err);
@@ -51,23 +51,23 @@ const useListPins = (userId, enabled = true, limit = 10) => {
 
       console.log(distanceFromBottom);
 
-      if (distanceFromBottom < 500 && !listLoading && hasMore) {
-        fetchListPins(page + 1);
+      if (distanceFromBottom < 500 && !listLoading && listHasMore) {
+        fetchListPins(listPage + 1);
       }
     };
 
     container.addEventListener("scroll", handleScroll);
 
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [enabled, page, listLoading, hasMore]);
+  }, [enabled, listPage, listLoading, listHasMore]);
 
   return {
     listScrollRef,
     listPins,
     listLoading,
     listError,
-    hasMore,
-    page,
+    listHasMore,
+    listPage,
     fetchListPins,
     setListPins,
   };

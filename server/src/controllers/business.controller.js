@@ -40,36 +40,6 @@ export const savePin = async (req, res) => {
   }
 };
 
-export const listPins = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
-
-    const skip = (page - 1) * limit;
-
-    const pins = await Pin.find({ userId })
-      .sort({ savedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalPins = await Pin.countDocuments({ userId });
-
-    return res.status(200).json({
-      success: true,
-      pins,
-      page,
-      limit,
-      totalPins,
-      hasMore: skip + pins.length < totalPins,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ status: false, message: "An error occured" });
-  }
-};
-
 export const deletePin = async (req, res) => {
   try {
     const { pinId } = req.params;
@@ -88,48 +58,123 @@ export const deletePin = async (req, res) => {
   }
 };
 
-export const getDomains = async (req, res) => {
-  const { userId } = req.params;
+export const listPins = async (req, res) => {
+  try {
+    const { userId } = req.params;
 
-  const domains = await Pin.aggregate([
-    {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-      },
-    },
-    {
-      $group: {
-        _id: "$domain",
-        count: { $sum: 1 },
-        latestSavedAt: { $max: "$savedAt" },
-      },
-    },
-    {
-      $sort: {
-        count: -1,
-      },
-    },
-  ]);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
 
-  res.json({
-    success: true,
-    domains,
-  });
+    const skip = (page - 1) * limit;
+
+    const pins = await Pin.find({ userId })
+      .sort({ savedAt: -1 })
+      .skip(skip)
+      .limit(limit + 1);
+
+    const hasMore = pins.length > limit;
+
+    if (hasMore) pins.pop();
+
+    return res.status(200).json({
+      success: true,
+      pins,
+      page,
+      limit,
+      hasMore,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "An error occured while fetching list pins",
+    });
+  }
 };
 
-export const getDomainPins = async (req, res) => {
+export const getDomains = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+
+    const skip = (page - 1) * limit;
+
+    const domains = await Pin.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+        },
+      },
+      {
+        $group: {
+          _id: "$domain",
+          count: { $sum: 1 },
+          latestSavedAt: { $max: "$savedAt" },
+        },
+      },
+      {
+        $sort: {
+          count: -1,
+        },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit + 1,
+      },
+    ]);
+
+    const hasMore = domains.length > limit;
+
+    if (hasMore) domains.pop();
+
+    return res.status(200).json({
+      success: true,
+      domains,
+      page,
+      limit,
+      hasMore,
+    });
+  } catch (error) {
+    console.error("Error fetching domains:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching domains",
+    });
+  }
+};
+
+export const getSelectedDomainPins = async (req, res) => {
   const { userId, domain } = req.params;
+
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+
+  const skip = (page - 1) * limit;
 
   const pins = await Pin.find({
     userId,
     domain,
   })
     .select("_id title url screenshot savedAt")
-    .sort({ savedAt: -1 });
+    .sort({ savedAt: -1 })
+    .skip(skip)
+    .limit(limit + 1);
 
-  return res.json({
+  const hasMore = pins.length > limit;
+
+  if (hasMore) pins.pop();
+
+  return res.status(200).json({
     success: true,
     pins,
+    page,
+    limit,
+    hasMore,
   });
 };
 

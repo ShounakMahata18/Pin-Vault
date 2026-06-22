@@ -1,6 +1,8 @@
 import React from "react";
 
 const DomainView = ({
+  domainScrollRef,
+  selectedDomainScrollRef,
   domains,
   selectedDomain,
   setSelectedDomain,
@@ -10,14 +12,17 @@ const DomainView = ({
   formatDateTime,
 }) => {
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-4">
+    <div className="flex flex-col lg:flex-row h-full min-h-0 gap-4">
       {/* LEFT / TOP: Domains List */}
       <div className="w-full lg:w-72 bg-slate-900 rounded-lg border shadow-sm flex flex-col overflow-hidden">
         <div className="hidden lg:block p-4 font-bold text-gray-200 border-b border-slate-700 shrink-0">
           Domains
         </div>
 
-        <div className="flex lg:flex-col p-2 lg:p-0 overflow-x-auto lg:overflow-y-auto flex-1 min-h-0">
+        <div
+          ref={domainScrollRef}
+          className="flex lg:flex-col p-2 lg:p-0 overflow-x-auto lg:overflow-y-auto flex-1 min-h-0"
+        >
           {domains.map((domain) => (
             <button
               key={domain._id}
@@ -41,7 +46,10 @@ const DomainView = ({
       </div>
 
       {/* RIGHT / BOTTOM: Pins Feed */}
-      <div className="flex-1 bg-slate-900 rounded-lg border overflow-y-auto">
+      <div
+        ref={selectedDomainScrollRef}
+        className="flex-1 min-h-0 bg-slate-900 rounded-lg border overflow-y-auto"
+      >
         {loading ? (
           <div className="p-10 text-center text-gray-400">Loading...</div>
         ) : (
