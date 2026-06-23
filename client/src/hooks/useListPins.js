@@ -49,8 +49,6 @@ const useListPins = (userId, enabled = true, limit = 10) => {
 
       const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
 
-      console.log(distanceFromBottom);
-
       if (distanceFromBottom < 500 && !listLoading && listHasMore) {
         fetchListPins(listPage + 1);
       }

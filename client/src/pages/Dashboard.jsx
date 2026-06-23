@@ -4,9 +4,11 @@ import { toast } from "react-toastify";
 import useView from "../hooks/useView";
 import useListPins from "../hooks/useListPins";
 import useDomainPins from "../hooks/useDomainPins";
+import useDatePins from "../hooks/useDatePins";
 import Navbar from "../components/Navbar";
 import ListView from "../components/ListView";
 import DomainView from "../components/DomainView";
+import DateView from "../components/DateView";
 import { AppData } from "../context/AppContext";
 
 import api from "../Api/apiInterceptor";
@@ -47,6 +49,18 @@ const Dashboard = () => {
     fetchDomains,
     fetchSelectedDomainPins,
   } = useDomainPins(userId, view === "domain", 20, 10);
+
+  // Date view
+  const {
+    dateScrollRef,
+    date,
+    setDate,
+    datePins,
+    dateLoading,
+    dateError,
+    dateHasMore,
+    datePage,
+  } = useDatePins(userId, view === "date", 10);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "Unknown Date";
@@ -162,53 +176,41 @@ const Dashboard = () => {
         </div>
 
         {view === "list" && (
-          <div ref={listScrollRef} className="flex-1 overflow-y-auto pr-2">
-            {listError && (
-              <p className="text-center text-red-600 mb-4">{listError}</p>
-            )}
-            <ListView
-              listPins={listPins}
-              loading={listLoading}
-              hasMore={listHasMore}
-              onDelete={handleDelete}
-              formatDateTime={formatDateTime}
-            />
-          </div>
+          <ListView
+            listScrollRef={listScrollRef}
+            listError={listError}
+            listPins={listPins}
+            loading={listLoading}
+            hasMore={listHasMore}
+            onDelete={handleDelete}
+            formatDateTime={formatDateTime}
+          />
         )}
 
         {view === "domain" && (
-          <div className="flex-1 min-h-0 pr-2 overflow-hidden">
-            <DomainView
-              domainScrollRef={domainScrollRef}
-              selectedDomainScrollRef={selectedDomainScrollRef}
-              domains={domains}
-              selectedDomain={selectedDomain}
-              setSelectedDomain={setSelectedDomain}
-              domainPins={selectedDomainPins}
-              loading={domainLoading}
-              onDelete={handleDelete}
-              formatDateTime={formatDateTime}
-            />
-          </div>
+          <DomainView
+            domainScrollRef={domainScrollRef}
+            selectedDomainScrollRef={selectedDomainScrollRef}
+            domains={domains}
+            selectedDomain={selectedDomain}
+            setSelectedDomain={setSelectedDomain}
+            domainPins={selectedDomainPins}
+            loading={domainLoading}
+            onDelete={handleDelete}
+            formatDateTime={formatDateTime}
+          />
         )}
 
         {view === "date" && (
-          <div className="space-y-4">
-            {listPins.map((pin) => (
-              <div
-                key={pin._id}
-                className="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
-              >
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                  {pin.title}
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  Saved: {formatDateTime(pin.savedAt)}
-                </p>
-              </div>
-            ))}
-          </div>
+          <DateView
+            dateScrollRef={dateScrollRef}
+            date={date}
+            setDate={setDate}
+            datePins={datePins}
+            loading={dateLoading}
+            onDelete={handleDelete}
+            formatDateTime={formatDateTime}
+          />
         )}
       </main>
     </div>

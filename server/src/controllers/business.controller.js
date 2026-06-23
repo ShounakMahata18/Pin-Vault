@@ -63,7 +63,7 @@ export const listPins = async (req, res) => {
     const { userId } = req.params;
 
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
+    const limit = Number(req.query.limit) || 10;
 
     const skip = (page - 1) * limit;
 
@@ -149,38 +149,52 @@ export const getDomains = async (req, res) => {
 };
 
 export const getSelectedDomainPins = async (req, res) => {
-  const { userId, domain } = req.params;
+  try {
+    const { userId, domain } = req.params;
 
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 20;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
 
-  const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-  const pins = await Pin.find({
-    userId,
-    domain,
-  })
-    .select("_id title url screenshot savedAt")
-    .sort({ savedAt: -1 })
-    .skip(skip)
-    .limit(limit + 1);
+    const pins = await Pin.find({
+      userId,
+      domain,
+    })
+      .select("_id title url screenshot savedAt")
+      .sort({ savedAt: -1 })
+      .skip(skip)
+      .limit(limit + 1);
 
-  const hasMore = pins.length > limit;
+    const hasMore = pins.length > limit;
 
-  if (hasMore) pins.pop();
+    if (hasMore) pins.pop();
 
-  return res.status(200).json({
-    success: true,
-    pins,
-    page,
-    limit,
-    hasMore,
-  });
+    return res.status(200).json({
+      success: true,
+      pins,
+      page,
+      limit,
+      hasMore,
+    });
+  } catch (error) {
+    console.error("Error fetching domain pins:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching domain pins",
+    });
+  }
 };
 
 export const getDatePins = async (req, res) => {
   try {
     const { userId, date } = req.params;
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
 
     const startDate = new Date(`${date}T00:00:00.000Z`);
     const endDate = new Date(`${date}T23:59:59.999Z`);
@@ -191,16 +205,28 @@ export const getDatePins = async (req, res) => {
         $gte: startDate,
         $lte: endDate,
       },
-    }).sort({ savedAt: -1 });
+    })
+      .sort({ savedAt: -1 })
+      .skip(skip)
+      .limit(limit + 1);
 
-    res.status(200).json({
+    const hasMore = pins.length > limit;
+
+    if (hasMore) pins.pop();
+
+    return res.status(200).json({
       success: true,
       pins,
+      page,
+      limit,
+      hasMore,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Error fetching date pins:", error);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "An error occurred while fetching date pins",
     });
   }
 };

@@ -1,6 +1,8 @@
 import React from "react";
 
 const ListView = ({
+  listScrollRef,
+  listError,
   listPins,
   loading,
   hasMore,
@@ -8,22 +10,24 @@ const ListView = ({
   formatDateTime,
 }) => {
   return (
-    <>
+    <div ref={listScrollRef} className="flex-1 overflow-y-auto pr-2">
+      {listError && (
+        <p className="text-center text-red-600 mb-4">
+          {listError}
+        </p>
+      )}
+
       {listPins.map((pin) => (
         <div
           key={pin._id}
           className="flex flex-col sm:flex-row sm:items-center bg-slate-900 p-4 mb-4 rounded-lg shadow-sm gap-4 sm:gap-0"
         >
-          {/* Screenshot: Full width on mobile, fixed width on larger screens */}
+          {/* Screenshot */}
           <div className="shrink-0 sm:mr-6 w-full sm:w-auto">
             <img
               src={pin.screenshot}
               alt={pin.title}
               className="w-full sm:w-64 aspect-video object-cover rounded border border-slate-700 shadow-sm"
-              onError={(e) => {
-                e.target.src =
-                  "https://via.placeholder.com/256x144?text=No+Image";
-              }}
             />
           </div>
 
@@ -32,7 +36,7 @@ const ListView = ({
             <h2 className="text-lg font-semibold mb-1 text-gray-200 truncate">
               {pin.title}
             </h2>
-            
+
             <a
               href={pin.url}
               target="_blank"
@@ -47,6 +51,7 @@ const ListView = ({
             </p>
           </div>
 
+          {/* Actions */}
           <div className="flex gap-2 shrink-0 sm:ml-4 w-full sm:w-auto mt-2 sm:mt-0">
             <a
               href={pin.url}
@@ -73,12 +78,18 @@ const ListView = ({
         </div>
       )}
 
+      {!loading && listPins.length === 0 && !listError && (
+        <div className="py-10 text-center text-gray-400">
+          No pins found
+        </div>
+      )}
+
       {!hasMore && listPins.length > 0 && (
         <div className="py-6 text-center text-gray-400">
           No more pins to load
         </div>
       )}
-    </>
+    </div>
   );
 };
 
