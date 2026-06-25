@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { decrypt } from "../utils/cryptoUtils.js";
+import { decrypt, hashDomain } from "../utils/cryptoUtils.js";
 import Pin from "../models/Pin.model.js";
 
 export const savePin = async (req, res) => {
@@ -24,7 +24,6 @@ export const savePin = async (req, res) => {
       title,
       screenshot,
       hostname,
-      savedAt: new Date(),
     });
 
     return res.status(200).json({
@@ -69,7 +68,7 @@ export const listPins = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const pins = await Pin.find({ userId })
-      .sort({ savedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit + 1);
 
@@ -110,9 +109,10 @@ export const getDomains = async (req, res) => {
       },
       {
         $group: {
-          _id: "$domain",
+          _id: "$domainHash",
+          domain: { $first: "$domain" },
           count: { $sum: 1 },
-          latestSavedAt: { $max: "$savedAt" },
+          latestSavedAt: { $max: "$createdAt" },
         },
       },
       {
@@ -133,12 +133,10 @@ export const getDomains = async (req, res) => {
     if (hasMore) domains.pop();
 
     const decryptedDomains = domains.map((domain) => {
-      const tempObj = { domain: domain._id };
-
-      const decryptedData = decrypt(tempObj, ["domain"]);
+      const decryptedData = decrypt(domain.domain);
 
       return {
-        _id: decryptedData.domain,
+        _id: decryptedData,
         count: domain.count,
         latestSavedAt: domain.latestSavedAt,
       };
@@ -164,6 +162,7 @@ export const getDomains = async (req, res) => {
 export const getSelectedDomainPins = async (req, res) => {
   try {
     const { userId, domain } = req.params;
+    const domainHash = hashDomain(domain);
 
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
@@ -172,10 +171,10 @@ export const getSelectedDomainPins = async (req, res) => {
 
     const pins = await Pin.find({
       userId,
-      domain,
+      domainHash,
     })
-      .select("_id title url screenshot savedAt")
-      .sort({ savedAt: -1 })
+      .select("_id title url screenshot createdAt")
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit + 1);
 
@@ -214,12 +213,12 @@ export const getDatePins = async (req, res) => {
 
     const pins = await Pin.find({
       userId,
-      savedAt: {
+      createdAt: {
         $gte: startDate,
         $lte: endDate,
       },
     })
-      .sort({ savedAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit + 1);
 

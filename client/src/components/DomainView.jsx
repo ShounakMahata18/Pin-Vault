@@ -85,7 +85,7 @@ const DomainView = ({
                     </a>
 
                     <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2">
-                      Captured: {formatDateTime(pin.savedAt)}
+                      Captured: {formatDateTime(pin.createdAt)}
                     </p>
                   </div>
 

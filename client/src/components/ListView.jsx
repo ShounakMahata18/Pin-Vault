@@ -47,7 +47,7 @@ const ListView = ({
             </a>
 
             <p className="text-xs sm:text-sm text-gray-500">
-              Captured: {formatDateTime(pin.savedAt)}
+              Captured: {formatDateTime(pin.createdAt)}
             </p>
           </div>
 

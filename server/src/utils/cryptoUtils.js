@@ -1,59 +1,60 @@
 import crypto from "crypto";
+import { text } from "stream/consumers";
 
 const SECRET_KEY = process.env.ENCRYPTION_SECRET_KEY;
-const ALGORITHM = "aes-256-gcm";
+const HMAC_SECRET_KEY = process.env.HMAC_SECRET_KEY;
 
-export const encrypt = (data, fields = []) => {
-  const result = { ...data };
+export const encrypt = (data) => {
+  if (!data) return data;
 
-  for (const key in data) {
-    if (fields.includes(key)) {
-      const iv = crypto.randomBytes(12);
-      const keyBuffer = Buffer.from(SECRET_KEY, "hex");
-      const cipher = crypto.createCipheriv(ALGORITHM, keyBuffer, iv);
+  const iv = crypto.randomBytes(12);
+  const keyBuffer = Buffer.from(SECRET_KEY, "hex");
+  const cipher = crypto.createCipheriv("aes-256-gcm", keyBuffer, iv);
 
-      let encrypted = cipher.update(String(data[key]), "utf-8", "hex");
-      encrypted += cipher.final("hex");
+  let encrypted = cipher.update(String(data), "utf-8", "hex");
+  encrypted += cipher.final("hex");
 
-      const authTag = cipher.getAuthTag();
+  const authTag = cipher.getAuthTag();
 
-      result[key] = `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
-    }
-  }
-
-  return result;
+  return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
 };
 
-export const decrypt = (data, fields = []) => {
-  const result = { ...data };
+export const decrypt = (encryptedText) => {
+  if (!encryptedText || typeof encryptedText !== "string") return encryptedText;
+
   const keyBuffer = Buffer.from(SECRET_KEY, "hex");
+  const parts = encryptedText.split(":");
 
-  for (const key in data) {
-    if (fields.includes(key) && typeof data[key] === "string") {
-      const parts = data[key].split(":");
+  if (parts.length === 3) {
+    const [ivHex, authTagHex, encryptedData] = parts;
 
-      // Ensure the string is properly formatted before attempting decryption
-      if (parts.length === 3) {
-        const [ivHex, authTagHex, encryptedText] = parts;
+    try {
+      const ivBuffer = Buffer.from(ivHex, "hex");
+      const authTagBuffer = Buffer.from(authTagHex, "hex");
 
-        const ivBuffer = Buffer.from(ivHex, "hex");
-        const authTagBuffer = Buffer.from(authTagHex, "hex");
+      const decipher = crypto.createDecipheriv(
+        "aes-256-gcm",
+        keyBuffer,
+        ivBuffer,
+      );
+      decipher.setAuthTag(authTagBuffer);
 
-        const decipher = crypto.createDecipheriv(ALGORITHM, keyBuffer, ivBuffer);
-        
-        decipher.setAuthTag(authTagBuffer);
+      let decrypted = decipher.update(encryptedData, "hex", "utf-8");
+      decrypted += decipher.final("utf-8");
 
-        try {
-          let decrypted = decipher.update(encryptedText, "hex", "utf-8");
-          decrypted += decipher.final("utf-8");
-          
-          result[key] = decrypted;
-        } catch (err) {
-          result[key] = null;
-        }
-      }
+      return decrypted;
+    } catch (err) {
+      return null;
     }
   }
 
-  return result;
+  // If it doesn't have 3 parts, it might not be encrypted yet (e.g., legacy data)
+  return encryptedText;
+};
+
+export const hashDomain = (domain) => {
+  return crypto
+    .createHmac("sha256", HMAC_SECRET_KEY)
+    .update(domain)
+    .digest("hex");
 };

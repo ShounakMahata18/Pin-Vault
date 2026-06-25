@@ -69,8 +69,7 @@ async function savePage(tab) {
     const pageData = {
       url: tab.url,
       title: tab.title,
-      screenshot: screenshot,
-      savedAt: new Date().toISOString(),
+      screenshot: screenshot
     };
 
     const serverResult = await sendToServer(pageData, token); // 🔹 CHANGED: pass token
