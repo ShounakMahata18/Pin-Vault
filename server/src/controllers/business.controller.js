@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+import { decrypt } from "../utils/cryptoUtils.js";
 import Pin from "../models/Pin.model.js";
 
 export const savePin = async (req, res) => {
@@ -131,9 +132,21 @@ export const getDomains = async (req, res) => {
 
     if (hasMore) domains.pop();
 
+    const decryptedDomains = domains.map((domain) => {
+      const tempObj = { domain: domain._id };
+
+      const decryptedData = decrypt(tempObj, ["domain"]);
+
+      return {
+        _id: decryptedData.domain,
+        count: domain.count,
+        latestSavedAt: domain.latestSavedAt,
+      };
+    });
+
     return res.status(200).json({
       success: true,
-      domains,
+      domains: decryptedDomains,
       page,
       limit,
       hasMore,
