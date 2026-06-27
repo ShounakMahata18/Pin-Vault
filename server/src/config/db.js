@@ -1,15 +1,38 @@
 import mongoose from "mongoose";
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URL, {
-      dbName: "QuickPin",
-    });
+let cached = global.mongoose;
 
-    console.log("MongoDB connected successfully");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB: " + error);
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
   }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      dbName: "QuickPin",
+    };
+
+    cached.promise = mongoose
+      .connect(process.env.MONGO_URL, opts)
+      .then((mongoose) => {
+        return mongoose;
+      });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+    console.log("MongoDB connected successfully");
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
 };
 
 export default connectDB;
