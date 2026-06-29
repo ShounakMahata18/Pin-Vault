@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Quick Pin",
   "version": "1.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwE/VXHvv5eZWWtndLOsHqy2iDdKUsMO0LM6SSx1GiKVaHaSF/wFt3zmHoMq7l+zMbmtKe69CxLQA3npyfZuxC0qxHk8sMJpvR/dj3FN9Duj1pe8oTnB5MCztS1ZqMvKDtN8ygzA8NjzAqgmP+5UG5f6kCRBpj1lwuGtNYtCw814CU6B7v6qavfPO6jvSrQdRStTCH+Pjb9/ZS41p/PGoZFDpWaockdwsIhHSRDSkP1ftP7yblZiWdRlwkv3LNdJNuEjoMraGgdXfnN5kwc8uUempUFvxuJruJLuRh/+g3onTQBxyyog0NIbO3O9+3iRhPLqgKF2WxGQ6h3SJnVwwpQIDAQAB",
   "description": "Pin pages to your portal with a snapshot",
 
   "permissions": [

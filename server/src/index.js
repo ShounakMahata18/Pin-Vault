@@ -16,7 +16,6 @@ await connectDB();
 export const redisClient = await redis();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // middlewares
 app.use(express.json());
@@ -24,11 +23,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: [
+      process.env.FRONTEND_URL,
+      "chrome-extension://glaicdlngpmakmigfkpjjedcamhconmj",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  }),
+  })
 );
 
 // routes
@@ -38,6 +39,4 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/extension", extensionRoutes);
 app.use("/api/user", userRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export default app;
